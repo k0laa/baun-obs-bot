@@ -49,7 +49,9 @@ Telegram'a atar. Kurulum:
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_CHAT_ID`
 3. (İsteğe bağlı) Aynı yerdeki **Variables** sekmesine `OBS_DONEM` ekleyebilirsin
-   (boş bırakılırsa güncel dönem izlenir).
+   (boş bırakılırsa OBS'nin seçili güncel dönemi izlenir). Örneğin
+   `20261`, 2026-2027 Güz dönemidir. Yanlış veya eski bir dönem kodu girilirse
+   o dönemin dersleri izlenir; yeni dönem dersleri görünmez.
 4. **Actions** sekmesinde workflow'ları etkinleştir. İstersen "OBS Not Kontrol"
    workflow'unu **Run workflow** ile elle tetikleyip test et.
 
@@ -60,6 +62,8 @@ Notlar:
   bu bir not botu için sorun değil.
 - Uzun süre (60+ gün) repoda hiç aktivite olmazsa GitHub schedule'ı durdurabilir;
   bot her koşuda durum dosyasını commit'lediği için repo aktif kalır.
+- Workflow, sabit `ubuntu-24.04` ortamında ve Node.js 24 uyumlu resmi GitHub
+  Actions sürümleriyle çalışır.
 
 ## Nasıl çalışıyor
 
@@ -68,14 +72,35 @@ Notlar:
   denenip çoğunluk oyuyla çözülüyor. Captcha gürültülü olduğu için tek deneme
   her zaman tutmayabilir; her denemede taze captcha çekildiğinden `--once` bir
   girişte 15 denemeye kadar tekrar eder (giriş ~30-60 sn sürebilir).
-- Not sayfası: sol menü "collapsed" olduğu için "Not Listesi" linkinin
-  oturuma özel `gkm` URL'si `IFRAME1` içine yükleniyor (doğrudan gitmek oturum
-  korumasına takılıyor). Notlar `#grd_not_listesi` tablosundan okunuyor:
-  ders kodu + sınav notları (Vize/Final/Büt) + harf notu + geçti/kaldı.
+- Not sayfası: sol menü "collapsed" olduğu için "Not Listesi" bağlantısının
+  oturuma özel `gkm` adresi, OBS'nin kendi menü olayı çalıştırılarak `IFRAME1`
+  içine yüklenir. Adresi yeni sekmede doğrudan açmak oturum korumasına
+  takılabilir.
+- Bot hem eski `#grd_not_listesi` tablo arayüzünü hem de yeni "Özet Not Durumu"
+  kart arayüzünü destekler. Yeni görünümde `BIL4101(2)` gibi ders başlıkları ve
+  kimliksiz sınav tabloları okunarak Vize/Final/Bütünleme, ortalama, harf notu
+  ve geçti/kaldı bilgileri takip edilir.
 - Varsayılan olarak **güncel dönem** izlenir. Belirli bir dönemi izlemek için
   `.env` içinde `OBS_DONEM` doldur (örn. `20261` = 2026-2027 Güz,
   `20252` = 2025-2026 Bahar).
+- OBS sayfası açıldığı halde hiçbir ders ayrıştırılamazsa bot boş sonucu yeni
+  durum olarak kaydetmez. Böylece geçici OBS veya arayüz hatalarında bütün
+  dersler yanlışlıkla "listeden kaldırıldı" bildirimi üretmez; Telegram'a hata
+  mesajı gönderilir ve önceki durum korunur.
 
-Not tablosu ayrıştırma gerçek veriyle test edildi ve doğru çalışıyor. OBS
-arayüzü ileride değişirse `src/obs_client.py` içindeki seçicileri güncellemek
+Eski tablo ve yeni kart ayrıştırması gerçek OBS verisiyle test edilmiştir. OBS
+arayüzü ileride tekrar değişirse hata mesajındaki sayfa metni teşhis amacıyla
+kullanılabilir ve `src/obs_client.py` içindeki seçicilerin güncellenmesi
 gerekebilir.
+
+## Sorun giderme
+
+- Yeni dönem dersleri görünmüyorsa GitHub'daki **Actions Variables** bölümünde
+  `OBS_DONEM` değerinin eski bir döneme sabitlenmediğini kontrol et. Güncel
+  dönemi otomatik izlemek için değişkeni sil veya boş bırak.
+- `OBS'den hic ders okunamadi` hatasında önce OBS'ye tarayıcıdan girip güncel
+  dönemde derslerin göründüğünü doğrula. Bot bu durumda mevcut
+  `data/last_grades.json` dosyasını değiştirmez.
+- GitHub Actions üzerinden uçtan uca kontrol için **Run workflow** ekranında
+  `test` seçeneğini aç. Test modu giriş, not okuma ve Telegram gönderimini
+  doğrular; kayıtlı not durumunu değiştirmez.

@@ -23,13 +23,13 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Python kur
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -38,7 +38,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y tesseract-ocr
 
       - name: Playwright tarayici onbellegi
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}
@@ -54,10 +54,8 @@ jobs:
           OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          # Izlenecek donem. Ileri Bilgisayar Aglari (but bekleniyor) 2025-2026
-          # Bahar = 20252 doneminde. GitHub'da OBS_DONEM degiskeni tanimlanirsa
-          # o kullanilir; yoksa 20252 varsayilir. Yeni donemde bu degeri guncelle.
-          OBS_DONEM: ${{ vars.OBS_DONEM || '20252' }}
+          # Tanimli degilse OBS'nin guncel donemi izlenir.
+          OBS_DONEM: ${{ vars.OBS_DONEM }}
         run: |
           if [ "${{ github.event.inputs.test }}" = "true" ]; then
             python -m src.main --test

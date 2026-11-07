@@ -33,6 +33,10 @@ def run_test() -> None:
 
 def check_once() -> None:
     new_grades = fetch_current_grades()
+    if not new_grades:
+        raise RuntimeError(
+            "OBS'den hic ders okunamadi; durum dosyasi degistirilmedi."
+        )
 
     # Ilk calistirma (kayit yok): mevcut durumu referans al, bildirim gonderme.
     if not state.state_file_exists():
